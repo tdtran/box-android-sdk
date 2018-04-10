@@ -2,6 +2,7 @@ package com.box.androidsdk.content.requests;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.text.TextUtils;
 import android.widget.Toast;
 
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -76,7 +78,7 @@ public abstract class BoxRequest<T extends BoxObject, R extends BoxRequest<T, R>
     private String mIfNoneMatchEtag;
 
     private transient WeakReference<SSLSocketFactoryWrapper> mSocketFactoryRef;
-    protected boolean mRequiresSocket = false;
+    protected boolean mRequiresSocket = Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
 
 
     /**
@@ -938,6 +940,12 @@ public abstract class BoxRequest<T extends BoxObject, R extends BoxRequest<T, R>
         }
 
         private Socket wrapSocket(Socket socket) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                if(socket != null && (socket instanceof SSLSocket)) {
+                    ((SSLSocket)socket).setEnabledProtocols(new String[] {"TLSv1.1", "TLSv1.2"});
+                }
+            }
+
             mSocket = new WeakReference<Socket>(socket);
             return socket;
         }
